@@ -78,3 +78,16 @@ const remove = (node) => {
    //showing updated data of local storage
   createInnerHtml();
 }
+//uc2 update function
+const update = (node) => {
+    //using empPayrollList we are retrieving the employee data  whose employee id is same as node id
+    let empPayrollData = empPayrollList.find(empData => empData._id == node.id);
+    //if emplPayrollData is null then it is returned
+    if (!empPayrollData) return;
+    //setting local storage by converting into json
+  //we are creating the local storage with a key 
+    localStorage.setItem('editEmp', JSON.stringify(empPayrollData))
+    //this will change the window location to the directed site but here we wont get the details filled in the form
+  //so we need to write a func to get details
+    window.location.replace(site_properties.add_emp_payroll_page);
+  } 
