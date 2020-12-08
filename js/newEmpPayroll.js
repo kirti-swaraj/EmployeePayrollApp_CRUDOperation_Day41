@@ -25,7 +25,7 @@ window.addEventListener('DOMContentLoaded', (event) => {
     salary.addEventListener('input', function () {
         output.textContent = salary.value;
     });
-
+// Date validation (within 30 days and not a future date)
     const date = document.querySelector('#date');
     date.addEventListener('input', function () {
         let startDate = document.querySelector('#day').value + " " + document.querySelector('#month').value + " " +
@@ -47,18 +47,97 @@ const setTextValue = (id, value) => {
 
 // uc3 - defining the save method for saving all emp details
 //this save method was already declared in the form onsubmit="save()";
-const save = () => {
+const save = (event) => {
+    //prevents removing of data, if there is error in name or date
+    event.preventDefault();
+    //if there is error, then form will not be submitted
+    event.stopPropagation();
     try {
-        //storing the value returned by the function
-        let employeePayrollData = createEmployeePayroll();
-        //calling function to store the employee data in it if is extracted in the above line properly
-        createAndUpdateStorage(employeePayrollData);
+        setEmployeePayrollObject(); 
+        createAndUpdateStorage();
+        resetForm();
+         //after resetting, moving back to home page.
+        window.location.replace(site_properties.home_page);
     }
     catch (e) {
         alert(e);
     }
 }
+const setEmployeePayrollObject = () => {
+     // if(!isUpdate) employeePayrollObj = new EmployeePayRoll();
+    employeePayrollObj._name = getInputValueById('#name');
+    employeePayrollObj._profilePic = getSelectedValues('[name=profile]').pop();
+    employeePayrollObj._gender = getSelectedValues('[name=gender]').pop();
+    employeePayrollObj._department = getSelectedValues('[name=department]');
+    employeePayrollObj._salary = getInputValueById('#salary');
+    employeePayrollObj._note = getInputValueById('#notes');
+    let date = getInputValueById('#day')+" "+getInputValueById('#month')+" "+
+               getInputValueById('#year') ;
+    employeePayrollObj._startDate = date;
+}
+//we are updating the createandUpdateStorage
+//earlier we were only cheacking is employeepayrolldata exists then add it to home page table
+//now if we want to update we need to check if it exists and whether we are adding a new id or updating the existing one
+const createAndUpdateStorage = () => {
+    let employeePayrollList = JSON.parse(localStorage.getItem("EmployeePayrollList"));
+   //check if list exists
+    if(employeePayrollList){
+        let empPayrollData = employeePayrollList.
+                             find(empData => empData._id == employeePayrollObj._id);
+        //if data does not existfor a particular id directly push the data into list with a new id
+        if (!empPayrollData) {
+            employeePayrollList.push(createEmployeePayrollData());
+        } else {
 
+            //if that id exists find index for that and splice it 
+            //first delete data on that index and then add that updated data 
+            const index = employeePayrollList
+                          .map(empData => empData._id)
+                          .indexOf(empPayrollData._id);
+            employeePayrollList.splice(index, 1, createEmployeePayrollData(empPayrollData._id));
+        }
+    }
+     //otherwise pass the data in teh form of an array
+     else{
+        employeePayrollList = [createEmployeePayrollData()]
+    }
+    localStorage.setItem("EmployeePayrollList", JSON.stringify(employeePayrollList))
+}
+
+const createEmployeePayrollData = (id) => {
+    //creating an instance of EmployeePayroll class
+    // let employeePayrollData = new EmployeePayRoll();
+    //if id does not exist create new emp id
+    let employeePayrollData = new EmployeePayRoll();
+    if (!id) employeePayrollData.id = createNewEmployeeId();
+    //else add in that id only
+    else employeePayrollData.id = id;
+    setEmployeePayrollData(employeePayrollData);
+    return employeePayrollData;
+}
+
+const setEmployeePayrollData = (employeePayrollData) => {
+    try {
+      employeePayrollData.name = employeePayrollObj._name;
+    } catch (e) {
+      setTextValue('.text-error', e);
+      throw e;
+    }
+    employeePayrollData.profilePic = employeePayrollObj._profilePic;
+    employeePayrollData.gender = employeePayrollObj._gender;
+    employeePayrollData.department = employeePayrollObj._department;
+    employeePayrollData.salary = employeePayrollObj._salary;
+    employeePayrollData.note = employeePayrollObj._note;
+    try {
+        employeePayrollData.startDate = 
+            new Date(Date.parse(employeePayrollObj._startDate));
+    } catch (e) {
+        setTextValue('.date-error', e);
+        throw e;
+    }
+    alert(employeePayrollData.toString());
+}
+//not being used after uc2 in day 41
 const createEmployeePayroll = () => {
     let employeePayrollData = new EmployeePayRoll();
     try {
@@ -103,29 +182,6 @@ const getInputValueById = (id) => {
     let value = document.querySelector(id).value;
     return value;
 }
-
-//uc4 storing in local storage    
-function createAndUpdateStorage(employeePayrollData) {
-    let employeePayrollList = [];
-    //we have an inbuilt function of local storage
-    //localstorage.getitem() is getting all item from list
-    //json will convert this json string into an object
-    employeePayrollList = JSON.parse(localStorage.getItem("EmployeePayrollList"));
-    //if this list is not undefined then it will push the data into it 
-    //otherwise it make a new list and put the first entry in this list 
-    //next time when this list is used it will go  with the if statement 
-    if (employeePayrollList != undefined) {
-        employeePayrollList.push(employeePayrollData);
-    }
-    else {
-        employeePayrollList = [employeePayrollData];
-    }
-    //alert is used for poping up
-    alert(employeePayrollList.toString());
-    //converting object back to json string format
-    localStorage.setItem("EmployeePayrollList", JSON.stringify(employeePayrollList))
-}
-
 //uc5 reset button which is being called by the form 
 //we are either setting or unsetting the values to empty or some specific value
 const resetForm = () => {
