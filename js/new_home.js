@@ -8,6 +8,7 @@ window.addEventListener('DOMContentLoaded', (event) => {
   //updating the count of elements by setting textcontent to lenth of
   document.querySelector(".emp-count").textContent = empPayrollList.length;
   createInnerHtml();
+  localStorage.removeItem('editEmp');
 });
 //calling from eventlistener as soon as the web page is loaded
 const getEmployeePayrollDataFromStorage = () => {
